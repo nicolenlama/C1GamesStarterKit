@@ -81,10 +81,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         # Now build reactive defenses based on where the enemy scored
         self.build_reactive_defense(game_state)
 
-        # If the turn is less than 5, stall with Scramblers and wait to see enemy's base
-        if game_state.turn_number < 5:
-            self.stall_with_scramblers(game_state)
-        else:
             # Now let's analyze the enemy base to see where their defenses are concentrated.
             # If they have many units in the front we can build a line for our EMPs to attack them at long range.
             if self.detect_enemy_unit(game_state, unit_type=None, valid_x=None, valid_y=[14, 15]) > 10:
@@ -178,6 +174,29 @@ class AlgoStrategy(gamelib.AlgoCore):
         # Now spawn EMPs next to the line
         # By asking attempt_spawn to spawn 1000 units, it will essentially spawn as many as we have resources for
         game_state.attempt_spawn(EMP, [24, 10], 1000)
+
+    def emp_line_strategy(self, game_state):
+        """
+        Build a line of the cheapest stationary unit so our EMP's can attack from long range.
+        """
+        # First let's figure out the cheapest unit
+        # We could just check the game rules, but this demonstrates how to use the GameUnit class
+        stationary_units = [FILTER, DESTRUCTOR, ENCRYPTOR]
+        cheapest_unit = FILTER
+        for unit in stationary_units:
+            unit_class = gamelib.GameUnit(unit, game_state.config)
+            if unit_class.cost[game_state.BITS] < gamelib.GameUnit(cheapest_unit, game_state.config).cost[game_state.BITS]:
+                cheapest_unit = unit
+
+        # Now let's build out a line of stationary units. This will prevent our EMPs from running into the enemy base.
+        # Instead they will stay at the perfect distance to attack the front two rows of the enemy base.
+        for x in range(27, 5, -1):
+            game_state.attempt_spawn(cheapest_unit, [x, 11])
+
+        # Now spawn EMPs next to the line
+        # By asking attempt_spawn to spawn 1000 units, it will essentially spawn as many as we have resources for
+        game_state.attempt_spawn(EMP, [24, 10], 1000)
+
 
     def least_damage_spawn_location(self, game_state, location_options):
         """
