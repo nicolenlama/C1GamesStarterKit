@@ -81,8 +81,7 @@ class AlgoStrategy(gamelib.AlgoCore):
             self.build_defences(game_state)
         if game_state.turn_number > 3:
             self.build_reactive_defense(game_state)
-            print("build defenses if unit damage high")
-            print("else stack the offense")
+
         # Now build reactive defenses based on where the enemy scored
         
 
@@ -144,9 +143,13 @@ class AlgoStrategy(gamelib.AlgoCore):
             # Build destructor one space above so that it doesn't block our own edge spawn locations
             build_location = [location[0], location[1]]
             if build_location in left:
-                game_state.attempt_upgrade(DESTRUCTOR,self.destructor_left_locations)
+                #coord = random.choices(self.destructor_left_locations,k=1)
+                game_state.attempt_upgrade(self.destructor_left_locations)
+                #print(coord)
             if build_location in right:
-                game_state.attempt_upgrade(DESTRUCTOR,self.destructor_right_locations)
+#                coord = random.choices(self.destructor_right_locations,k=1)
+                #print(coord)
+                game_state.attempt_upgrade(self.destructor_right_locations)
             else:
                 self.encryptor_logic(game_state)
         
