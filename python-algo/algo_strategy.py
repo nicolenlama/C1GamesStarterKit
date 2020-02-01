@@ -90,16 +90,16 @@ class AlgoStrategy(gamelib.AlgoCore):
         else:
             the_spawn_location_options = early_spawn_location_options
             #Every 4th turn, 
-            if game_state.turn_number % 4 == 1:
+            if game_state.turn_number >= 8:
                 go_all_out = game_state.get_resource(BITS)/game_state.type_cost(EMP)[BITS] >= 4
                 if go_all_out:
-                    if game_state.turn_number > 8:
+                    if game_state.turn_number % 8 == 1:
                         # pick a side with the least amount of ENCRYPTORS and DESTRUCTORS:
                         if self.pick_spawn_point_side(game_state, unit_type=None, valid_x=None, valid_y=[14, 27]) == 0:
-                            game_state.attempt_spawn(EMP, the_spawn_location_options[0], 10)
+                            game_state.attempt_spawn(EMP, the_spawn_location_options[0], 100)
                         else:
                             #spawn right side
-                            game_state.attempt_spawn(EMP, the_spawn_location_options[1], 10)
+                            game_state.attempt_spawn(EMP, the_spawn_location_options[1], 100)
                     else:
                         # They don't have many units in the front so lets figure out their least defended area and send Pings there.     
                         # pick a side with the least amount of ENCRYPTORS and DESTRUCTORS:
