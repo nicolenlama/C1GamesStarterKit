@@ -77,11 +77,15 @@ class AlgoStrategy(gamelib.AlgoCore):
         If there are no stationary units to attack in the front, we will send Pings to try and score quickly.
         """
         # First, place basic defense
+        health = game_state.my_health
         if game_state.turn_number < 3:
             self.build_defences(game_state)
         if game_state.turn_number > 3:
             self.build_defences(game_state)
             self.build_reactive_defense(game_state)
+        if health < 20:
+            destructor_locations_desperate = [[2, 12], [3, 12], [4, 12], [7, 12], [8, 12], [9, 12], [10, 12], [11, 12], [12, 12],[13, 12], [14, 12], [15, 12], [16, 12], [17, 12], [18, 12], [19, 12], [20, 12], [23, 12],[24, 12], [25, 12], [3, 11], [4, 11], [8, 11], [9, 11], [10, 11], [11, 11], [12, 11],[13, 11], [14, 11], [15, 11], [16, 11], [17, 11], [18, 11], [19, 11], [23, 11], [24, 11],[4, 10], [9, 10], [10, 10], [11, 10], [12, 10], [13, 10], [14, 10], [15, 10], [16, 10],[17, 10], [18, 10], [23, 10], [10, 9], [11, 9], [12, 9], [13, 9], [14, 9], [15, 9],[16, 9], [17, 9], [11, 8], [12, 8], [13, 8], [14, 8], [15, 8], [16, 8], [12, 7], [13, 7],[14, 7], [15, 7], [13, 6], [14, 6]]
+            game_state.attempt_spawn(DESTRUCTOR,destructor_locations_desperate)
 
         early_spawn_location_options = [[5, 8], [23, 9]]
         
