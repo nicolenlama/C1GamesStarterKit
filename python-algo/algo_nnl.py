@@ -80,7 +80,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.turn_number < 3:
             self.build_defences(game_state)
         if game_state.turn_number > 3:
-            self.build_reactive_defenses(game_state)
+            self.build_reactive_defense(game_state)
             print("build defenses if unit damage high")
             print("else stack the offense")
         # Now build reactive defenses based on where the enemy scored
