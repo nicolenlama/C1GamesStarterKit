@@ -76,10 +76,15 @@ class AlgoStrategy(gamelib.AlgoCore):
         For offense we will use long range EMPs if they place stationary units near the enemy's front.
         If there are no stationary units to attack in the front, we will send Pings to try and score quickly.
         """
-        # First, place basic defenses
-        self.build_defences(game_state)
+        # First, place basic defense
+        if game_state.turn_number < 3:
+            self.build_defences(game_state)
+        if game_state.turn_number > 3:
+            self.build_reactive_defenses(game_state)
+            print("build defenses if unit damage high")
+            print("else stack the offense")
         # Now build reactive defenses based on where the enemy scored
-        self.build_reactive_defense(game_state)
+        
 
         # If the turn is less than 5, stall with Scramblers and wait to see enemy's base
         #if game_state.turn_number < 5:
@@ -88,22 +93,22 @@ class AlgoStrategy(gamelib.AlgoCore):
 
             # Now let's analyze the enemy base to see where their defenses are concentrated.
             # If they have many units in the front we can build a line for our EMPs to attack them at long range.
-            if self.detect_enemy_unit(game_state, unit_type=None, valid_x=None, valid_y=[14, 15]) > 10:
-                self.emp_line_strategy(game_state)
-            else:
+        if self.detect_enemy_unit(game_state, unit_type=None, valid_x=None, valid_y=[14, 15]) > 10:
+            self.emp_line_strategy(game_state)
+        else:
                 # They don't have many units in the front so lets figure out their least defended area and send Pings there.
 
                 # Only spawn Ping's every other turn
                 # Sending more at once is better since attacks can only hit a single ping at a time
-                if game_state.turn_number % 2 == 1:
+            if game_state.turn_number % 2 == 1:
                     # To simplify we will just check sending them from back left and right
-                    ping_spawn_location_options = [[13, 0], [14, 0]]
-                    best_location = self.least_damage_spawn_location(game_state, ping_spawn_location_options)
-                    game_state.attempt_spawn(PING, best_location, 1000)
+                ping_spawn_location_options = [[13, 0], [14, 0]]
+                best_location = self.least_damage_spawn_location(game_state, ping_spawn_location_options)
+                game_state.attempt_spawn(PING, best_location, 1000)
 
                 # Lastly, if we have spare cores, let's build some Encryptors to boost our Pings' health.
-                encryptor_locations = [[13, 2], [14, 2], [13, 3], [14, 3]]
-                game_state.attempt_spawn(ENCRYPTOR, encryptor_locations)
+            #encryptor_locations = [[13, 2], [14, 2], [13, 3], [14, 3]]
+            #game_state.attempt_spawn(ENCRYPTOR, encryptor_locations)
 
     def build_defences(self, game_state):
         """
@@ -115,12 +120,10 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         # Place destructors that attack enemy units
         self.destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
+        self.destructor_left_locations = [[4, 12], [5, 11]]
+        self.destructor_right_locations = [[23, 12], [22, 11]]
         # attempt_spawn will try to spawn units if we have resources, and will check if a blocking unit is already there
         game_state.attempt_spawn(DESTRUCTOR, self.destructor_locations)
-        if game_state.:
-            game_state.attempt_upgrade(destructor_locations)
-        if game_state.:
-            encryptor_logic()
 
         # Place filters in front of destructors to soak up damage for them
         filter_locations = [[8, 12], [19, 12]]
@@ -134,10 +137,19 @@ class AlgoStrategy(gamelib.AlgoCore):
         We can track where the opponent scored by looking at events in action frames 
         as shown in the on_action_frame function
         """
+        left = [[0, 13], [1, 12], [2, 11], [3, 10], [4, 9], [5, 8], [6, 7], [7, 6], [8, 5], [9, 4], [10, 3], [11, 2], [12, 1], [13, 0]]
+        right = [[27, 13], [26, 12], [25, 11], [24, 10], [23, 9], [22, 8], [21, 7], [20, 6], [19, 5], [18, 4], [17, 3], [16, 2], [15, 1], [14, 0]]
+
         for location in self.scored_on_locations:
             # Build destructor one space above so that it doesn't block our own edge spawn locations
-            build_location = [location[0], location[1]+1]
-            game_state.attempt_spawn(DESTRUCTOR, build_location)
+            build_location = [location[0], location[1]]
+            if build_location in left:
+                game_state.attempt_upgrade(DESTRUCTOR,self.destructor_left_locations)
+            if build_location in right:
+                game_state.attempt_upgrade(DESTRUCTOR,self.destructor_right_locations)
+            else:
+                self.encryptor_logic(game_state)
+        
 
     def encryptor_logic(self, game_state):
         '''
@@ -247,19 +259,13 @@ class AlgoStrategy(gamelib.AlgoCore):
         for breach in breaches:
             location = breach[0]
             unit_owner_self = True if breach[4] == 1 else False
-            if unit_owner_self:
-                gamelib.debug_write("Breach at {0}. Upgrading Destructor".format(location))
-                game_state.attempt_upgrade(destructor_locations)
-                else:
-                    gamelib.debug_write("We attacked opponent. Let's Build Encryptors")
-                    encryptor_logic()
 
             # When parsing the frame data directly, 
             # 1 is integer for yourself, 2 is opponent (StarterKit code uses 0, 1 as player_index instead)
-            #if not unit_owner_self:
-                #gamelib.debug_write("Got scored on at: {}".format(location))
-                #self.scored_on_locations.append(location)
-                #gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
+            if not unit_owner_self:
+                gamelib.debug_write("Got scored on at: {}".format(location))
+                self.scored_on_locations.append(location)
+                gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
 
 
 if __name__ == "__main__":
