@@ -80,6 +80,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.turn_number < 3:
             self.build_defences(game_state)
         if game_state.turn_number > 3:
+            self.build_defences(game_state)
             self.build_reactive_defense(game_state)
 
         early_spawn_location_options = [[5, 8], [23, 9]]
