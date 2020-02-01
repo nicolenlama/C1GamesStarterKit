@@ -157,6 +157,42 @@ class AlgoStrategy(gamelib.AlgoCore):
             units can occupy the same space.
             """
 
+    def pick_spawn_point_side(self,game_state,unit_type=None, valid_x = None, valid_y = None):
+        """
+        Checking enemy side and atributing points to each defensive unit for starting strat.
+
+        FILTERs do not count (EMPs will rek them)
+        ENCRYPTORS=2
+        DESTRUCTORS=3
+        
+        Splitting field into two: every point with x=[0:13] is in left_side, every point with x=[14:27] is in right_side 
+        
+        Default: Spawn on Left-side = 0
+        """
+        units_left_side = 0
+        units_right_side = 0
+        
+        result=0
+
+        for location in game_state.game_map:
+            if game_state.contains_stationary_unit(location):
+                for unit in game_state.game_map[location]:
+                    if unit.player_index == 1 and (unit_type is None or unit.unit_type == unit_type) and (valid_x is None or location[0] in valid_x) and (valid_y is None or location[1] in valid_y):
+                        if location[0] in 0:13:
+                            if unit.unit_type == ENCRYPTOR:
+                                left_side += 2
+                            if unit.unit_type == DESTRUCTOR:
+                                left_side += 3   
+                        else:
+                            if unit.unit_type == ENCRYPTOR:
+                                right_side += 2
+                            if unit.unit_type == DESTRUCTOR:
+                                right_side += 3 
+
+        if units_right_side >= units_left_side:
+            result = 1
+        return result
+      
     def emp_line_strategy(self, game_state):
         """
         Build a line of the cheapest stationary unit so our EMP's can attack from long range.
