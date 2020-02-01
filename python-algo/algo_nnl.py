@@ -87,6 +87,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.turn_number < 8:
             the_spawn_location_options = early_spawn_location_options
         else:
+			the_spawn_location_options = early_spawn_location_options
             #Every 4th turn, 
             if game_state.turn_number % 4 == 1:
 
@@ -162,19 +163,30 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
         # Useful tool for setting up your base locations: https://www.kevinbai.design/terminal-map-maker
         # More community tools available at: https://terminal.c1games.com/rules#Download
+                # Useful tool for setting up your base locations: https://www.kevinbai.design/terminal-map-maker
+                        # More community tools available at: https://terminal.c1games.com/rules#Download
+
+                                # Place destructors that attack enemy units
+		destructor_locations = [[4, 12], [13, 12], [23, 12], [5, 11], [22, 11]]
+		destructor_left_locations = [[4, 12], [5, 11]]
+		destructor_right_locations = [[23, 12], [22, 11]]
+		game_state.attempt_spawn(DESTRUCTOR, destructor_locations)
+		# Place filters in front of destructors to soak up damage for them
+		filter_locations = [[0, 13], [2, 13], [3, 13], [6, 13], [7, 13], [8, 13], [9, 13], [10, 13], [11, 13], [14,13],[15, 13], [16, 13], [17, 13], [18, 13], [19, 13], [20, 13],[21, 13], [24, 13], [25, 13], [27, 13], [1, 13], [12, 13], [13, 13], [26, 13]]
+		game_state.attempt_spawn(FILTER, filter_locations)
 
         # Place destructors that attack enemy units
-        self.destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
-        self.destructor_left_locations = [[4, 12], [5, 11]]
-        self.destructor_right_locations = [[23, 12], [22, 11]]
+        #self.destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
+        #self.destructor_left_locations = [[4, 12], [5, 11]]
+        #self.destructor_right_locations = [[23, 12], [22, 11]]
         # attempt_spawn will try to spawn units if we have resources, and will check if a blocking unit is already there
-        game_state.attempt_spawn(DESTRUCTOR, self.destructor_locations)
+        #game_state.attempt_spawn(DESTRUCTOR, self.destructor_locations)
 
         # Place filters in front of destructors to soak up damage for them
-        filter_locations = [[8, 12], [19, 12]]
-        game_state.attempt_spawn(FILTER, filter_locations)
+        #filter_locations = [[8, 12], [19, 12]]
+        #game_state.attempt_spawn(FILTER, filter_locations)
         # upgrade filters so they soak more damage
-        game_state.attempt_upgrade(filter_locations)
+        #game_state.attempt_upgrade(filter_locations)
 
     def build_reactive_defense(self, game_state):
         """
