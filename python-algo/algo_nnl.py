@@ -82,9 +82,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.build_reactive_defense(game_state)
 
         # If the turn is less than 5, stall with Scramblers and wait to see enemy's base
-        if game_state.turn_number < 5:
-            self.stall_with_scramblers(game_state)
-        else:
+        #if game_state.turn_number < 5:
+        #    self.stall_with_scramblers(game_state)
+        #else:
+
             # Now let's analyze the enemy base to see where their defenses are concentrated.
             # If they have many units in the front we can build a line for our EMPs to attack them at long range.
             if self.detect_enemy_unit(game_state, unit_type=None, valid_x=None, valid_y=[14, 15]) > 10:
@@ -113,10 +114,14 @@ class AlgoStrategy(gamelib.AlgoCore):
         # More community tools available at: https://terminal.c1games.com/rules#Download
 
         # Place destructors that attack enemy units
-        destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
+        self.destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
         # attempt_spawn will try to spawn units if we have resources, and will check if a blocking unit is already there
-        game_state.attempt_spawn(DESTRUCTOR, destructor_locations)
-        
+        game_state.attempt_spawn(DESTRUCTOR, self.destructor_locations)
+        if game_state.:
+            game_state.attempt_upgrade(destructor_locations)
+        if game_state.:
+            encryptor_logic()
+
         # Place filters in front of destructors to soak up damage for them
         filter_locations = [[8, 12], [19, 12]]
         game_state.attempt_spawn(FILTER, filter_locations)
@@ -133,6 +138,20 @@ class AlgoStrategy(gamelib.AlgoCore):
             # Build destructor one space above so that it doesn't block our own edge spawn locations
             build_location = [location[0], location[1]+1]
             game_state.attempt_spawn(DESTRUCTOR, build_location)
+
+    def encryptor_logic(self, game_state):
+        '''
+        This function will spawn initial encryptors one side at a time. 
+        This function will then be replaced by the adaptable encryptor
+        function around mid game
+        '''
+        encryptor_locations_left = [[4,9],[5,10],[4,10],[4,10]] 
+        encryptor_locations_right = [[24,10],[23,10],[24,11],[24,11]]
+        en_loc_tempy =  encryptor_locations_left + encryptor_locations_right
+
+        coordinates = random.choices(en_loc_tempy, k=6)
+        game_state.attempt_spawn(ENCRYPTOR,coordinates)
+
 
     def stall_with_scramblers(self, game_state):
         """
@@ -228,12 +247,19 @@ class AlgoStrategy(gamelib.AlgoCore):
         for breach in breaches:
             location = breach[0]
             unit_owner_self = True if breach[4] == 1 else False
+            if unit_owner_self:
+                gamelib.debug_write("Breach at {0}. Upgrading Destructor".format(location))
+                game_state.attempt_upgrade(destructor_locations)
+                else:
+                    gamelib.debug_write("We attacked opponent. Let's Build Encryptors")
+                    encryptor_logic()
+
             # When parsing the frame data directly, 
             # 1 is integer for yourself, 2 is opponent (StarterKit code uses 0, 1 as player_index instead)
-            if not unit_owner_self:
-                gamelib.debug_write("Got scored on at: {}".format(location))
-                self.scored_on_locations.append(location)
-                gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
+            #if not unit_owner_self:
+                #gamelib.debug_write("Got scored on at: {}".format(location))
+                #self.scored_on_locations.append(location)
+                #gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
 
 
 if __name__ == "__main__":
