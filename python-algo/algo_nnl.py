@@ -82,32 +82,78 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.turn_number > 3:
             self.build_reactive_defense(game_state)
 
-        # Now build reactive defenses based on where the enemy scored
+        early_spawn_location_options = [[5, 8], [23, 9]]
         
-
-        # If the turn is less than 5, stall with Scramblers and wait to see enemy's base
-        #if game_state.turn_number < 5:
-        #    self.stall_with_scramblers(game_state)
-        #else:
-
-            # Now let's analyze the enemy base to see where their defenses are concentrated.
-            # If they have many units in the front we can build a line for our EMPs to attack them at long range.
-        if self.detect_enemy_unit(game_state, unit_type=None, valid_x=None, valid_y=[14, 15]) > 10:
-            self.emp_line_strategy(game_state)
+        if game_state.turn_number < 8:
+            the_spawn_location_options = early_spawn_location_options
         else:
-                # They don't have many units in the front so lets figure out their least defended area and send Pings there.
+            #Every 4th turn, 
+            if game_state.turn_number % 4 == 1:
 
-                # Only spawn Ping's every other turn
-                # Sending more at once is better since attacks can only hit a single ping at a time
-            if game_state.turn_number % 2 == 1:
-                    # To simplify we will just check sending them from back left and right
-                ping_spawn_location_options = [[13, 0], [14, 0]]
-                best_location = self.least_damage_spawn_location(game_state, ping_spawn_location_options)
-                game_state.attempt_spawn(PING, best_location, 1000)
-
+                # Now let's analyze the enemy base to see where their defenses are concentrated.
+                # If they have many units in the front we can build a line for our EMPs to attack them at long range.
+                go_all_out = game_state.get_resource(BITS)/game_state.type_cost(EMP)[BITS] >= 4:
+                if go_all_out:
+                    if self.detect_enemy_unit(game_state, unit_type=None, valid_x=None, valid_y=[14, 15]) > 10:
+                        if game_state.turn_number > 8:
+                            # pick a side with the least amount of ENCRYPTORS and DESTRUCTORS:
+                            if self.pick_spawn_point_side(game_state, unit_type=None, valid_x=None, valid_y=[14, 27]) == 0:
+                                #spawn left side
+                                game_state.attempt_spawn(EMP, the_spawn_location_options[1], 10)
+                            else:
+                                #spawn right side
+                                game_state.attempt_spawn(EMP, the_spawn_location_options[2], 10)
+                    else:
+                        # They don't have many units in the front so lets figure out their least defended area and send Pings there.     
+                        # pick a side with the least amount of ENCRYPTORS and DESTRUCTORS:
+                        if self.pick_spawn_point_side(game_state, unit_type=None, valid_x=None, valid_y=[14, 27]) == 0:
+                            #spawn left side
+                            # Sending more at once is better since attacks can only hit a single ping at a time
+                            game_state.attempt_spawn(PING, the_spawn_location_options[1], 4)
+                        else:
+                            #spawn right side
+                            # Sending more at once is better since attacks can only hit a single ping at a time
+                            game_state.attempt_spawn(PING, the_spawn_location_options[2], 4)
                 # Lastly, if we have spare cores, let's build some Encryptors to boost our Pings' health.
             #encryptor_locations = [[13, 2], [14, 2], [13, 3], [14, 3]]
             #game_state.attempt_spawn(ENCRYPTOR, encryptor_locations)
+
+    def pick_spawn_point_side(self,game_state,unit_type=None, valid_x = None, valid_y = None):
+        """
+        Checking enemy side and atributing points to each defensive unit for starting strat.
+
+        FILTERs do not count (EMPs will rek them)
+        ENCRYPTORS=2
+        DESTRUCTORS=3
+        
+        Splitting field into two: every point with x=[0:13] is in left_side, every point with x=[14:27] is in right_side 
+        
+        Default: Spawn on Left-side = 0
+        """
+        units_left_side = 0
+        units_right_side = 0
+        
+        result=0
+
+        for location in game_state.game_map:
+            if game_state.contains_stationary_unit(location):
+                for unit in game_state.game_map[location]:
+                    if unit.player_index == 1 and (unit_type is None or unit.unit_type == unit_type) and (valid_x is None or location[0] in valid_x) and (valid_y is None or location[1] in valid_y):
+                        if location[0] in range(0,13):
+                            if unit.unit_type == ENCRYPTOR:
+                                left_side += 2
+                            if unit.unit_type == DESTRUCTOR:
+                                left_side += 3   
+                        else:
+                            if unit.unit_type == ENCRYPTOR:
+                                right_side += 2
+                            if unit.unit_type == DESTRUCTOR:
+                                right_side += 3 
+
+        if units_right_side <= units_left_side:
+            result = 1
+        return result
+     
 
     def build_defences(self, game_state):
         """
